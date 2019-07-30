@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/xbcsmith/shovelput/config"
 	"log"
 	"net/http"
 	"os"
@@ -18,36 +17,27 @@ var producer *Producer
 var consumer *Consumer
 
 var (
-	/*brokers   = flag.String("brokers", os.Getenv("KAFKA_PEERS"), "The Kafka brokers to connect to, as a comma separated list")
+	brokers         = flag.String("brokers", os.Getenv("KAFKA_PEERS"), "The Kafka brokers to connect to, as a comma separated list")
 	producerTopic   = flag.String("producer_topic", "tcp_layer_messages", "The topic to produce messages to")
-	consumerTopics   = flag.String("consumer_topic", "workers_layer_messages", "The topic to consume messages from")
-	consumerGroupID   = flag.String("consumer_group_id", "", "consumer group id")
-	verbose   = flag.Bool("verbose", false, "Turn on Sarama logging")
-	certFile  = flag.String("certificate", "", "The optional certificate file for client authentication")
-	keyFile   = flag.String("key", "", "The optional key file for client authentication")
-	caFile    = flag.String("ca", "", "The optional certificate authority file for TLS client authentication")
-	verifySsl = flag.Bool("verify", false, "Optional verify ssl certificates chain")*/
-	configPath      = flag.String("config", "", "config file")
-	consumerGroupID string
+	consumerTopics  = flag.String("consumer_topic", "workers_layer_messages", "The topic to consume messages from")
+	consumerGroupID = flag.String("consumer_group_id", "", "consumer group id")
+	verbose         = flag.Bool("verbose", false, "Turn on Sarama logging")
+	certFile        = flag.String("certificate", "", "The optional certificate file for client authentication")
+	keyFile         = flag.String("key", "", "The optional key file for client authentication")
+	caFile          = flag.String("ca", "", "The optional certificate authority file for TLS client authentication")
+	verifySsl       = flag.Bool("verify", false, "Optional verify ssl certificates chain")
 )
 
 func main() {
 	flag.Parse()
-	if *configPath == "" {
+	if brokers == "" {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	config.InitConfig(*configPath)
-	configuration := config.Get()
-	/*if *brokers == "" {
-		flag.PrintDefaults()
-		os.Exit(1)
-	}*/
 
+	configuration := NewConfig(brokers, producerTopic, consumerTopics, consumerGroupID)
 	if configuration.ConsumerGroupID == "" {
 		consumerGroupID = NewULID()
-	} else {
-		consumerGroupID = configuration.ConsumerGroupID
 	}
 
 	log.Printf("Kafka brokers: %s", strings.Join(configuration.BrokersList, ", "))
