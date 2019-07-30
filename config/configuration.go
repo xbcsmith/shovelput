@@ -32,5 +32,5 @@ type Configuration struct {
 	BrokersList     []string `yaml:"brokers_list"`
 	ProducerTopic   string   `yaml:"producer_topic"`
 	ConsumerTopics  []string `yaml:"consumer_topics"`
-	ConsumerGroupId string   `yaml:"consumer_group_id"`
+	ConsumerGroupID string   `yaml:"consumer_group_id"`
 }

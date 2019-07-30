@@ -7,6 +7,7 @@ import (
 	"net"
 )
 
+// ConnectionEventType not sure I need this...
 type ConnectionEventType string
 
 const (
@@ -24,6 +25,7 @@ type Client struct {
 	onDataEvent       func(c *Client, data []byte)                            /* function for handling new date events */
 }
 
+// NewClient creates a new instance of Client
 func NewClient(conn net.Conn, onConnectionEvent func(c *Client, eventType ConnectionEventType, e error), onDataEvent func(c *Client, data []byte)) *Client {
 	return &Client{
 		conn:              conn,
@@ -63,16 +65,18 @@ func (c *Client) Send(message []byte) error {
 	return err
 }
 
-// Send bytes to client
+// SendBytes sends bytes to client
 func (c *Client) SendBytes(b []byte) error {
 	_, err := c.conn.Write(b)
 	return err
 }
 
+// Conn returns a connection
 func (c *Client) Conn() net.Conn {
 	return c.conn
 }
 
+// Close closes a connection
 func (c *Client) Close() error {
 	if c.conn != nil {
 		return c.conn.Close()

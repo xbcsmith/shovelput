@@ -21,14 +21,14 @@ var (
 	/*brokers   = flag.String("brokers", os.Getenv("KAFKA_PEERS"), "The Kafka brokers to connect to, as a comma separated list")
 	producerTopic   = flag.String("producer_topic", "tcp_layer_messages", "The topic to produce messages to")
 	consumerTopics   = flag.String("consumer_topic", "workers_layer_messages", "The topic to consume messages from")
-	consumerGroupId   = flag.String("consumer_group_id", "", "consumer group id")
+	consumerGroupID   = flag.String("consumer_group_id", "", "consumer group id")
 	verbose   = flag.Bool("verbose", false, "Turn on Sarama logging")
 	certFile  = flag.String("certificate", "", "The optional certificate file for client authentication")
 	keyFile   = flag.String("key", "", "The optional key file for client authentication")
 	caFile    = flag.String("ca", "", "The optional certificate authority file for TLS client authentication")
 	verifySsl = flag.Bool("verify", false, "Optional verify ssl certificates chain")*/
 	configPath      = flag.String("config", "", "config file")
-	consumerGroupId string
+	consumerGroupID string
 )
 
 func main() {
@@ -44,10 +44,10 @@ func main() {
 		os.Exit(1)
 	}*/
 
-	if configuration.ConsumerGroupId == "" {
-		consumerGroupId = NewULID()
+	if configuration.ConsumerGroupID == "" {
+		consumerGroupID = NewULID()
 	} else {
-		consumerGroupId = configuration.ConsumerGroupId
+		consumerGroupID = configuration.ConsumerGroupID
 	}
 
 	log.Printf("Kafka brokers: %s", strings.Join(configuration.BrokersList, ", "))
@@ -67,11 +67,11 @@ func main() {
 		OnDataReceived: onDataConsumed,
 		OnError:        onConsumerError,
 	}
-	consumer = NewConsumer(consumerCallbacks, configuration.BrokersList, consumerGroupId, configuration.ConsumerTopics)
+	consumer = NewConsumer(consumerCallbacks, configuration.BrokersList, consumerGroupID, configuration.ConsumerTopics)
 	consumer.Consume()
 
-	signal_chan := make(chan os.Signal, 1)
-	signal.Notify(signal_chan,
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel,
 		syscall.SIGINT,
 		syscall.SIGTERM,
 		syscall.SIGQUIT,
@@ -79,7 +79,7 @@ func main() {
 
 	go func() {
 		for {
-			s := <-signal_chan
+			s := <-signalChannel
 			switch s {
 			case syscall.SIGINT:
 				fmt.Println("syscall.SIGINT")
@@ -137,7 +137,7 @@ func onDataReceived(clientID string, data []byte) {
 	if string(data) == "Ping" {
 		log.Println("sending Pong")
 		//answer with pong
-		server.SendDataByClientId(clientID, []byte("Pong"))
+		server.SendDataByClientID(clientID, []byte("Pong"))
 	}
 	if producer != nil {
 		var deviceRequest DeviceRequest
@@ -145,8 +145,8 @@ func onDataReceived(clientID string, data []byte) {
 		if err == nil {
 			serverRequest := ServerRequest{
 				DeviceRequest: deviceRequest,
-				ServerId:      "1",
-				ClientId:      clientID,
+				ServerID:      "1",
+				ClientID:      clientID,
 			}
 			producer.Produce(serverRequest)
 		} else {
@@ -173,9 +173,9 @@ func onDataConsumed(data []byte) {
 		log.Println(err)
 		return
 	}
-	if serverResponse.DeviceResponse.Action == "connect.response" && serverResponse.DeviceResponse.Status == "ok" && serverResponse.ClientId != "" {
+	if serverResponse.DeviceResponse.Action == "connect.response" && serverResponse.DeviceResponse.Status == "ok" && serverResponse.ClientID != "" {
 		//attach the device id to our existing client
-		err = server.SetDeviceIDToClient(serverResponse.ClientId, serverResponse.DeviceID)
+		err = server.SetDeviceIDToClient(serverResponse.ClientID, serverResponse.DeviceID)
 		if err != nil {
 			log.Println(err)
 		}
@@ -185,8 +185,8 @@ func onDataConsumed(data []byte) {
 		log.Println(err)
 		return
 	}
-	if serverResponse.ClientId != "" {
-		server.SendDataByClientId(serverResponse.ClientId, toSend)
+	if serverResponse.ClientID != "" {
+		server.SendDataByClientID(serverResponse.ClientID, toSend)
 	} else {
 		if serverResponse.DeviceID != "" {
 			server.SendDataByDeviceID(serverResponse.DeviceID, toSend)

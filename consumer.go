@@ -10,18 +10,26 @@ import (
 	"syscall"
 )
 
+// Consumer struct
 type Consumer struct {
 	consumer  *cluster.Consumer
 	callbacks ConsumerCallbacks
 }
 
-func NewConsumer(callbacks ConsumerCallbacks, brokerList []string, groupId string, topics []string) *Consumer {
+// ConsumerCallbacks are callbacks for the consumer
+type ConsumerCallbacks struct {
+	OnDataReceived func(msg []byte)
+	OnError        func(err error)
+}
+
+// NewConsumer returns a new Consumer
+func NewConsumer(callbacks ConsumerCallbacks, brokerList []string, groupID string, topics []string) *Consumer {
 	consumer := Consumer{callbacks: callbacks}
 
 	config := cluster.NewConfig()
 	config.ClientID = NewULID()
 	config.Consumer.Offsets.Initial = sarama.OffsetNewest
-	saramaConsumer, err := cluster.NewConsumer(brokerList, groupId, topics, config)
+	saramaConsumer, err := cluster.NewConsumer(brokerList, groupID, topics, config)
 	if err != nil {
 		panic(err)
 	}
@@ -30,6 +38,7 @@ func NewConsumer(callbacks ConsumerCallbacks, brokerList []string, groupId strin
 
 }
 
+// Consume consumes messages from the bus
 func (c *Consumer) Consume() {
 	// Create signal channel
 	sigchan := make(chan os.Signal, 1)
@@ -66,11 +75,7 @@ func (c *Consumer) Consume() {
 
 }
 
+// Close closes the consumer
 func (c *Consumer) Close() {
 	c.consumer.Close()
-}
-
-type ConsumerCallbacks struct {
-	OnDataReceived func(msg []byte)
-	OnError        func(err error)
 }

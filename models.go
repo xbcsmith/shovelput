@@ -1,5 +1,6 @@
 package main
 
+// DeviceResponse struct for device response
 type DeviceResponse struct {
 	Action       string                 `json:"action"`
 	ID           string                 `json:"id"`
@@ -9,13 +10,15 @@ type DeviceResponse struct {
 	ErrorMessage string                 `json:"errorMessage"`
 }
 
+// ServerResponse struct for server response
 type ServerResponse struct {
 	DeviceResponse DeviceResponse `json:"deviceResponse"`
-	ServerId       string         `json:"serverId"` // unique identifier for each server in case of having more than 1 server
-	ClientId       string         `json:"clientId"`
+	ServerID       string         `json:"serverID"`
+	ClientID       string         `json:"clientID"`
 	DeviceID       string         `json:"deviceID"`
 }
 
+// DeviceRequest struct for device requests
 type DeviceRequest struct {
 	Action   string                 `json:"action"`
 	DeviceID string                 `json:"deviceID"`
@@ -23,8 +26,9 @@ type DeviceRequest struct {
 	Data     map[string]interface{} `json:"data"`
 }
 
+// ServerRequest struct for server requests
 type ServerRequest struct {
 	DeviceRequest DeviceRequest `json:"deviceRequest"`
-	ServerId      string        `json:"serverId"` // unique identifier for each server in case of having more than 1 server
-	ClientId      string        `json:"clientId"`
+	ServerID      string        `json:"serverID"`
+	ClientID      string        `json:"clientID"`
 }
