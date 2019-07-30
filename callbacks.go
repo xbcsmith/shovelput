@@ -1,7 +1,7 @@
 package main
 
 type Callbacks struct {
-	OnNewConnection        func(clientUid string)
-	OnConnectionTerminated func(clientUid string)
-	OnDataReceived         func(clientUid string, data []byte)
+	OnNewConnection        func(clientID string)
+	OnConnectionTerminated func(clientID string)
+	OnDataReceived         func(clientID string, data []byte)
 }

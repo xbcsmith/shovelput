@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/bsm/sarama-cluster"
-	"github.com/satori/go.uuid"
 	"log"
 	"os"
 	"os/signal"
@@ -20,7 +19,7 @@ func NewConsumer(callbacks ConsumerCallbacks, brokerList []string, groupId strin
 	consumer := Consumer{callbacks: callbacks}
 
 	config := cluster.NewConfig()
-	config.ClientID = uuid.NewV4().String()
+	config.ClientID = NewULID()
 	config.Consumer.Offsets.Initial = sarama.OffsetNewest
 	saramaConsumer, err := cluster.NewConsumer(brokerList, groupId, topics, config)
 	if err != nil {

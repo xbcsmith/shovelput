@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/satori/go.uuid"
 	"github.com/xbcsmith/shovelput/config"
-	// messages "github.com/xbcsmith/shovelput/messages"
-	// models "github.com/xbcsmith/shovelput/models"
 	"log"
 	"net/http"
 	"os"
@@ -48,7 +45,7 @@ func main() {
 	}*/
 
 	if configuration.ConsumerGroupId == "" {
-		consumerGroupId = uuid.NewV4().String()
+		consumerGroupId = NewULID()
 	} else {
 		consumerGroupId = configuration.ConsumerGroupId
 	}
@@ -124,23 +121,23 @@ func cleanup() {
 	os.Exit(0)
 }
 
-func onNewConnection(clientUid string) {
-	log.Println("onNewConnection, uid: ", clientUid)
+func onNewConnection(clientID string) {
+	log.Println("onNewConnection, id: ", clientID)
 }
 
-func onConnectionTerminated(clientUid string) {
-	log.Println("onConnectionTerminated, uid: ", clientUid)
+func onConnectionTerminated(clientID string) {
+	log.Println("onConnectionTerminated, id: ", clientID)
 }
 
 /**
 Called when data is received from a TCP client, will generate a message to the message broker
 */
-func onDataReceived(clientUid string, data []byte) {
-	log.Println("onDataReceived, uid: ", clientUid, ", data: ", string(data))
+func onDataReceived(clientID string, data []byte) {
+	log.Println("onDataReceived, id: ", clientID, ", data: ", string(data))
 	if string(data) == "Ping" {
 		log.Println("sending Pong")
 		//answer with pong
-		server.SendDataByClientId(clientUid, []byte("Pong"))
+		server.SendDataByClientId(clientID, []byte("Pong"))
 	}
 	if producer != nil {
 		var deviceRequest DeviceRequest
@@ -149,7 +146,7 @@ func onDataReceived(clientUid string, data []byte) {
 			serverRequest := ServerRequest{
 				DeviceRequest: deviceRequest,
 				ServerId:      "1",
-				ClientId:      clientUid,
+				ClientId:      clientID,
 			}
 			producer.Produce(serverRequest)
 		} else {
@@ -178,7 +175,7 @@ func onDataConsumed(data []byte) {
 	}
 	if serverResponse.DeviceResponse.Action == "connect.response" && serverResponse.DeviceResponse.Status == "ok" && serverResponse.ClientId != "" {
 		//attach the device id to our existing client
-		err = server.SetDeviceUidToClient(serverResponse.ClientId, serverResponse.DeviceUid)
+		err = server.SetDeviceIDToClient(serverResponse.ClientId, serverResponse.DeviceID)
 		if err != nil {
 			log.Println(err)
 		}
@@ -191,8 +188,8 @@ func onDataConsumed(data []byte) {
 	if serverResponse.ClientId != "" {
 		server.SendDataByClientId(serverResponse.ClientId, toSend)
 	} else {
-		if serverResponse.DeviceUid != "" {
-			server.SendDataByDeviceUid(serverResponse.DeviceUid, toSend)
+		if serverResponse.DeviceID != "" {
+			server.SendDataByDeviceID(serverResponse.DeviceID, toSend)
 		}
 	}
 

@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/satori/go.uuid"
 	"log"
 	"net"
 	"sync"
@@ -22,22 +21,21 @@ func (s *Server) onConnectionEvent(c *Client, eventType ConnectionEventType, e e
 	switch eventType {
 	case CONNECTION_EVENT_TYPE_NEW_CONNECTION:
 		s.connLock.Lock()
-		u1 := uuid.NewV4()
-		uidString := u1.String()
-		c.Uid = uidString
-		s.connections[uidString] = c
+		id := NewULID()
+		c.ID = id
+		s.connections[id] = c
 		s.connLock.Unlock()
-		//log.Println(eventType , " ,  uid:", c.Uid, " , ip: ", c.Conn().RemoteAddr().String())
+		//log.Println(eventType , " ,  id:", c.ID, " , ip: ", c.Conn().RemoteAddr().String())
 		if s.callbacks.OnNewConnection != nil {
-			s.callbacks.OnNewConnection(uidString)
+			s.callbacks.OnNewConnection(id)
 		}
 	case CONNECTION_EVENT_TYPE_CONNECTION_TERMINATED, CONNECTION_EVENT_TYPE_CONNECTION_GENERAL_ERROR:
-		//log.Println(eventType , " ,  uid:", c.Uid, " , ip: ", c.Conn().RemoteAddr().String(), " , error: ", e.Error())
+		//log.Println(eventType , " ,  id:", c.ID, " , ip: ", c.Conn().RemoteAddr().String(), " , error: ", e.Error())
 		s.connLock.Lock()
-		delete(s.connections, c.Uid)
+		delete(s.connections, c.ID)
 		s.connLock.Unlock()
 		if s.callbacks.OnConnectionTerminated != nil {
-			s.callbacks.OnConnectionTerminated(c.Uid)
+			s.callbacks.OnConnectionTerminated(c.ID)
 		}
 	}
 }
@@ -45,7 +43,7 @@ func (s *Server) onConnectionEvent(c *Client, eventType ConnectionEventType, e e
 func (s *Server) onDataEvent(c *Client, data []byte) {
 	//log.Println("onDataEvent, ", c.Conn().RemoteAddr().String(), " data: " , string(data))
 	if s.callbacks.OnDataReceived != nil {
-		s.callbacks.OnDataReceived(c.Uid, data)
+		s.callbacks.OnDataReceived(c.ID, data)
 	}
 }
 
@@ -76,23 +74,23 @@ func NewServer(address string, callbacks Callbacks) *Server {
 	return s
 }
 
-func (s *Server) SendDataByClientId(clientUid string, data []byte) error {
-	if s.connections[clientUid] != nil {
-		return s.connections[clientUid].Send(data)
+func (s *Server) SendDataByClientId(clientID string, data []byte) error {
+	if s.connections[clientID] != nil {
+		return s.connections[clientID].Send(data)
 	} else {
-		return errors.New(fmt.Sprint("no connection with uid ", clientUid))
+		return errors.New(fmt.Sprint("no connection with id ", clientID))
 	}
 
 	return nil
 }
 
-func (s *Server) SendDataByDeviceUid(deviceUid string, data []byte) error {
+func (s *Server) SendDataByDeviceID(deviceID string, data []byte) error {
 	for k := range s.connections {
-		if s.connections[k].DeviceUid == deviceUid {
+		if s.connections[k].DeviceID == deviceID {
 			return s.connections[k].Send(data)
 		}
 	}
-	return errors.New(fmt.Sprint("no connection with deviceUid ", deviceUid))
+	return errors.New(fmt.Sprint("no connection with deviceID ", deviceID))
 }
 
 func (s *Server) Close() {
@@ -105,11 +103,11 @@ func (s *Server) Close() {
 	s.listener.Close()
 }
 
-func (s *Server) SetDeviceUidToClient(clientUid string, deviceUid string) error {
-	if s.connections[clientUid] != nil {
-		s.connections[clientUid].DeviceUid = deviceUid
+func (s *Server) SetDeviceIDToClient(clientID string, deviceID string) error {
+	if s.connections[clientID] != nil {
+		s.connections[clientID].DeviceID = deviceID
 		return nil
 	} else {
-		return errors.New(fmt.Sprint("no connection with uid ", clientUid))
+		return errors.New(fmt.Sprint("no connection with id ", clientID))
 	}
 }

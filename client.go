@@ -17,8 +17,8 @@ const (
 
 // Client holds info about connection
 type Client struct {
-	Uid               string /* client is responsible of generating a uinque uid for each request, it will be sent in the response from the server so that client will know what request generated this response */
-	DeviceUid         string /* a unique id generated from the client itself */
+	ID                string /* client is responsible of generating a ulid for each request, it will be sent in the response from the server so that client will know what request generated this response */
+	DeviceID          string /* a unique id generated from the client itself */
 	conn              net.Conn
 	onConnectionEvent func(c *Client, eventType ConnectionEventType, e error) /* function for handling new connections */
 	onDataEvent       func(c *Client, data []byte)                            /* function for handling new date events */
