@@ -106,7 +106,7 @@ fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
 
 .PHONY: test
 test: ; $(info $(M) running tests…) @
-	$Q go test -v cmd/*
+	$Q go test -v
 
 .PHONY: clean
 clean: ; $(info $(M) cleaning…)	@ ## Cleanup everything

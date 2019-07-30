@@ -1,39 +1,30 @@
 version: '2'
 
 services:
-  zookeeper1:
-    image: 'bitnami/zookeeper:smitty'
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
     ports:
-      - '2181'
-      - '2888'
-      - '3888'
-    #volumes:
-    #  - /tmp/zookeeper:/bitnami/zookeeper
+     - '2181:2181'
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
-      - ZOO_SERVER_ID=1
-      - ZOO_SERVERS=0.0.0.0:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
-  zookeeper2:
-    image: 'bitnami/zookeeper:smitty'
+  kafka1:
+    image: 'bitnami/kafka:latest'
     ports:
-      - '2181'
-      - '2888'
-      - '3888'
-    #volumes:
-    #  - /tmp/zookeeper:/bitnami/zookeeper
+      - '9092'
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-      - ZOO_SERVER_ID=2
-      - ZOO_SERVERS=zookeeper1:2888:3888,0.0.0.0:2888:3888,zookeeper3:2888:3888
-  zookeeper3:
-    image: 'bitnami/zookeeper:smitty'
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+  kafka2:
+    image: 'bitnami/kafka:latest'
     ports:
-      - '2181'
-      - '2888'
-      - '3888'
-    #volumes:
-    #  - /tmp/zookeeper:/bitnami/zookeeper
+      - '9092'
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-      - ZOO_SERVER_ID=3
-      - ZOO_SERVERS=zookeeper1:2888:3888,zookeeper2:2888:3888,0.0.0.0:2888:3888
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+  kafka3:
+    image: 'bitnami/kafka:latest'
+    ports:
+      - '9092'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
