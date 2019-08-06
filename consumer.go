@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/Shopify/sarama"
-	"github.com/bsm/sarama-cluster"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/Shopify/sarama"
+	// TODO Deprecate cluster
+	cluster "github.com/bsm/sarama-cluster"
 )
 
 // Consumer struct

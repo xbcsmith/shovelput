@@ -20,7 +20,7 @@ type Server struct {
 // onConnectionEvent event processing for connection events
 func (s *Server) onConnectionEvent(c *Client, eventType ConnectionEventType, e error) {
 	switch eventType {
-	case CONNECTION_EVENT_TYPE_NEW_CONNECTION:
+	case ConnectionEventTypeNewConnection:
 		s.connLock.Lock()
 		id := NewULID()
 		c.ID = id
@@ -30,7 +30,7 @@ func (s *Server) onConnectionEvent(c *Client, eventType ConnectionEventType, e e
 		if s.callbacks.OnNewConnection != nil {
 			s.callbacks.OnNewConnection(id)
 		}
-	case CONNECTION_EVENT_TYPE_CONNECTION_TERMINATED, CONNECTION_EVENT_TYPE_CONNECTION_GENERAL_ERROR:
+	case ConnectionEventTypeConnectionTerminated, ConnectionEventTypeGeneralError:
 		//log.Println(eventType , " ,  id:", c.ID, " , ip: ", c.Conn().RemoteAddr().String(), " , error: ", e.Error())
 		s.connLock.Lock()
 		delete(s.connections, c.ID)
@@ -59,7 +59,7 @@ func (s *Server) Listen() {
 	for {
 		conn, _ := s.listener.Accept()
 		client := NewClient(conn, s.onConnectionEvent, s.onDataEvent)
-		s.onConnectionEvent(client, CONNECTION_EVENT_TYPE_NEW_CONNECTION, nil)
+		s.onConnectionEvent(client, ConnectionEventTypeNewConnection, nil)
 		go client.listen()
 
 	}

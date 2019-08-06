@@ -2,9 +2,19 @@ package main
 
 import (
 	"crypto/rand"
-	"github.com/oklog/ulid"
+	"os"
 	"time"
+
+	"github.com/oklog/ulid"
 )
+
+// GetEnv returns an env variable value or a default
+func GetEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
 
 // NewULID returns a ULID as a string.
 func NewULID() string {

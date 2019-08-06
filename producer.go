@@ -4,10 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"github.com/Shopify/sarama"
 	"io/ioutil"
 	"log"
 	"time"
+
+	"github.com/Shopify/sarama"
 )
 
 // Producer struct for messaging
@@ -32,9 +33,9 @@ func NewProducer(callbacks ProducerCallbacks, brokerList []string, topic string,
 		config.Net.TLS.Enable = true
 		config.Net.TLS.Config = tlsConfig
 	}
-	config.Producer.RequiredAcks = sarama.WaitForLocal       // Only wait for the leader to ack
-	config.Producer.Compression = sarama.CompressionSnappy   // Compress messages
-	config.Producer.Flush.Frequency = 500 * time.Millisecond // Flush batches every 500ms
+	config.Producer.RequiredAcks = sarama.WaitForLocal
+	config.Producer.Compression = sarama.CompressionSnappy
+	config.Producer.Flush.Frequency = 500 * time.Millisecond
 
 	saramaProducer, err := sarama.NewAsyncProducer(brokerList, config)
 	if err != nil {
@@ -74,7 +75,7 @@ func createTLSConf(certFile *string, keyFile *string, caFile *string, verifySsl 
 			InsecureSkipVerify: *verifySsl,
 		}
 	}
-	// will be nil by default if nothing is provided
+
 	return t
 }
 

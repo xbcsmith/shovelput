@@ -7,14 +7,17 @@ import (
 	"net"
 )
 
-// ConnectionEventType not sure I need this...
+// ConnectionEventType
 type ConnectionEventType string
 
-const (
-	CONNECTION_EVENT_TYPE_NEW_CONNECTION           ConnectionEventType = "new_connection"
-	CONNECTION_EVENT_TYPE_CONNECTION_TERMINATED    ConnectionEventType = "connection_terminated"
-	CONNECTION_EVENT_TYPE_CONNECTION_GENERAL_ERROR ConnectionEventType = "general_error"
-)
+// ConnectionEventTypeNewConnection string constant for new connections
+const ConnectionEventTypeNewConnection ConnectionEventType = "new_connection"
+
+// ConnectionEventTypeConnectionTerminated string constant for connection terminated
+const ConnectionEventTypeConnectionTerminated ConnectionEventType = "connection_terminated"
+
+// ConnectionEventTypeGeneralError string constant for general error
+const ConnectionEventTypeGeneralError ConnectionEventType = "general_error"
 
 // Client holds info about connection
 type Client struct {
@@ -45,7 +48,7 @@ func (c *Client) listen() {
 		case io.EOF:
 			// connection terminated
 			c.conn.Close()
-			c.onConnectionEvent(c, CONNECTION_EVENT_TYPE_CONNECTION_TERMINATED, err)
+			c.onConnectionEvent(c, ConnectionEventTypeConnectionTerminated, err)
 			return
 		case nil:
 			// new data available
@@ -53,7 +56,7 @@ func (c *Client) listen() {
 		default:
 			log.Fatalf("Receive data failed:%s", err)
 			c.conn.Close()
-			c.onConnectionEvent(c, CONNECTION_EVENT_TYPE_CONNECTION_GENERAL_ERROR, err)
+			c.onConnectionEvent(c, ConnectionEventTypeGeneralError, err)
 			return
 		}
 	}

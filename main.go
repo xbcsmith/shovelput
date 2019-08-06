@@ -16,28 +16,30 @@ var server *Server
 var producer *Producer
 var consumer *Consumer
 
-var (
-	brokers         = flag.String("brokers", os.Getenv("KAFKA_PEERS"), "The Kafka brokers to connect to, as a comma separated list")
-	producerTopic   = flag.String("producer_topic", "tcp_layer_messages", "The topic to produce messages to")
-	consumerTopics  = flag.String("consumer_topic", "workers_layer_messages", "The topic to consume messages from")
-	consumerGroupID = flag.String("consumer_group_id", "", "consumer group id")
-	verbose         = flag.Bool("verbose", false, "Turn on Sarama logging")
-	certFile        = flag.String("certificate", "", "The optional certificate file for client authentication")
-	keyFile         = flag.String("key", "", "The optional key file for client authentication")
-	caFile          = flag.String("ca", "", "The optional certificate authority file for TLS client authentication")
-	verifySsl       = flag.Bool("verify", false, "Optional verify ssl certificates chain")
-)
-
 func main() {
+	brokers := flag.String("brokers", GetEnv("KAFKA_PEERS", "localhost:9092"), "The Kafka brokers to connect to, as a comma separated list")
+	producerTopic := flag.String("producer_topic", GetEnv("SHOVELPUT_PRODUCER_TOPICS", "shovelput"), "The topic to produce messages to")
+	consumerTopics := flag.String("consumer_topic", GetEnv("SHOVELPUT_CONSUMER_TOPICS", "foo"), "The topic to consume messages from")
+	consumerGroupID := flag.String("consumer_group_id", GetEnv("SHOVELPUT_CONSUMER_GROUP_ID", ""), "consumer group id")
+	// verbose := flag.Bool("verbose", false, "Turn on Sarama logging")
+	serverPort := flag.String("port", GetEnv("SHOVELPUT_PORT", "9999"), "Shovelput Server Port")
+	certFile := flag.String("certificate", "", "The optional certificate file for client authentication")
+	keyFile := flag.String("key", "", "The optional key file for client authentication")
+	caFile := flag.String("ca", "", "The optional certificate authority file for TLS client authentication")
+	verifySSL := flag.Bool("verify", false, "Optional verify ssl certificates chain")
 	flag.Parse()
-	if brokers == "" {
+
+	if *brokers == "" {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
-	configuration := NewConfig(brokers, producerTopic, consumerTopics, consumerGroupID)
+	bkrs := strings.Split(*brokers, ",")
+	ct := strings.Fields(*consumerTopics)
+
+	configuration, _ := NewConfig(bkrs, *producerTopic, ct, *consumerGroupID)
 	if configuration.ConsumerGroupID == "" {
-		consumerGroupID = NewULID()
+		configuration.ConsumerGroupID = NewULID()
 	}
 
 	log.Printf("Kafka brokers: %s", strings.Join(configuration.BrokersList, ", "))
@@ -46,18 +48,19 @@ func main() {
 		OnConnectionTerminated: onConnectionTerminated,
 		OnNewConnection:        onNewConnection,
 	}
-	server = NewServer(":3000", callbacks)
+	server = NewServer(":"+*serverPort, callbacks)
 	producerCallbacks := ProducerCallbacks{
 		OnError: onProducerError,
 	}
-	f := false
-	producer = NewProducer(producerCallbacks, configuration.BrokersList, configuration.ProducerTopic, nil, nil, nil, &f)
+	// f := false
+	// producer = NewProducer(producerCallbacks, configuration.BrokersList, configuration.ProducerTopic, nil, nil, nil, &f)
+	producer = NewProducer(producerCallbacks, configuration.BrokersList, configuration.ProducerTopic, certFile, keyFile, caFile, verifySSL)
 
 	consumerCallbacks := ConsumerCallbacks{
 		OnDataReceived: onDataConsumed,
 		OnError:        onConsumerError,
 	}
-	consumer = NewConsumer(consumerCallbacks, configuration.BrokersList, consumerGroupID, configuration.ConsumerTopics)
+	consumer = NewConsumer(consumerCallbacks, configuration.BrokersList, configuration.ConsumerGroupID, configuration.ConsumerTopics)
 	consumer.Consume()
 
 	signalChannel := make(chan os.Signal, 1)
@@ -93,6 +96,8 @@ func main() {
 
 	go func() {
 		http.HandleFunc("/", handler)
+		http.HandleFunc("/healthz/readiness", readinessCheck)
+		http.HandleFunc("/healthz/liveness", livenessCheck)
 		http.ListenAndServe(":8080", nil)
 	}()
 
@@ -101,7 +106,26 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Server is up and running!")
+	w.WriteHeader(http.StatusOK)
+}
+
+// ping tests connectivity to the Kafka bus
+func ping() error {
+	return nil
+}
+
+// readinessCheck checks that server can connect to KAFKA_PEERS
+func readinessCheck(w http.ResponseWriter, r *http.Request) {
+	err := ping()
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusServiceUnavailable), http.StatusServiceUnavailable)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// livenessCheck checks that app is live
+func livenessCheck(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
 
 func cleanup() {
